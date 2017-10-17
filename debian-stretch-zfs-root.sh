@@ -228,7 +228,7 @@ mount -t zfs ${ZPOOL}/var/spool /target/var/spool
 
 zfs create ${ZPOOL}/srv
 mkdir -v /target/srv
-mount -t zfs ${ZPOOL}/srv /target/var/srv
+mount -t zfs ${ZPOOL}/srv /target/srv
 
 # Add services specific ZFSs
 if [ "${SRVZFS}" -eq 1 ]; then
