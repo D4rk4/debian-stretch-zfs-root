@@ -211,11 +211,8 @@ chmod 1777 /target/var/tmp
 # Creating missed ZFSs from https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS 
 zfs create -o setuid=off ${ZPOOL}/home
 mkdir -v /target/home
-#mount -t zfs ${ZPOOL}/home /target/home
 
 zfs create -o mountpoint=/root ${ZPOOL}/home/root
-mkdir -v /target/root
-mount -t zfs ${ZPOOL}/home/root /target/root
 
 zfs create -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
 mkdir -v /target/var/cache
