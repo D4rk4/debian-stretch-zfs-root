@@ -210,22 +210,22 @@ chmod 1777 /target/var/tmp
 
 # Creating missed ZFSs from https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS 
 zfs create -o setuid=off ${ZPOOL}/home
+zfs mount ${ZPOOL}/home
 
 zfs create -o mountpoint=/root ${ZPOOL}/home/root
+zfs mount ${ZPOOL}/home/root
 
 zfs create -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
-mkdir -v /target/var/cache
-mount -t zfs ${ZPOOL}/var/cache /target/var/cache 
+zfs mount ${ZPOOL}/var/cache 
 
 zfs create ${ZPOOL}/var/log
-mkdir -v /target/var/log
-mount -t zfs ${ZPOOL}/var/log	/target/var/log
+zfs mount ${ZPOOL}/var/log
 
 zfs create ${ZPOOL}/var/spool
-mkdir -v /target/var/spool
-mount -t zfs ${ZPOOL}/var/spool /target/var/spool
+zfs mount ${ZPOOL}/var/spool
 
 zfs create ${ZPOOL}/srv
+zfs mount ${ZPOOL}/srv
 
 # Add services specific ZFSs
 if [ "${SRVZFS}" -eq 1 ]; then
