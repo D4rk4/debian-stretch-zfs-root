@@ -191,6 +191,7 @@ zfs set acltype=posixacl $ZPOOL
 
 zfs create -o canmount=off -o mountpoint=none $ZPOOL/ROOT
 zfs create -o canmount=noauto -o mountpoint=/ $ZPOOL/ROOT/debian-$TARGETDIST
+zfs mount ${ZPOOL}/ROOT/debian-${TARGETDIST}
 zpool set bootfs=$ZPOOL/ROOT/debian-$TARGETDIST $ZPOOL
 
 zfs create -o mountpoint=/tmp -o setuid=off -o exec=off -o devices=off -o com.sun:auto-snapshot=false $ZPOOL/tmp
