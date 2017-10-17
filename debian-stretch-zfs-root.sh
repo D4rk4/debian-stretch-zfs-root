@@ -138,8 +138,8 @@ case $DEBRELEASE in
 		;;
 
 	9*)
-		echo "deb http://deb.debian.org/debian/ stretch contrib non-free" >/etc/apt/sources.list.d/contrib-non-free.list
-		test -f /var/lib/apt/lists/deb.debian.org_debian_dists_stretch_non-free_binary-amd64_Packages || apt-get update
+		echo "deb http://cdn.debian.net/debian/ stretch contrib non-free" >/etc/apt/sources.list.d/contrib-non-free.list
+		test -f /var/lib/apt/lists/cdn.debian.net_debian_dists_stretch_non-free_binary-amd64_Packages || apt-get update
 		if [ ! -d /usr/share/doc/zfs-dkms ]; then NEED_PACKAGES+=(zfs-dkms); fi
 		;;
 	*)
@@ -245,7 +245,7 @@ for EFIPARTITION in "${EFIPARTITIONS[@]}"; do
 	((I++)) || true
 done
 
-debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools $TARGETDIST /target http://cdn.debian.net/debian/
+debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree $TARGETDIST /target http://cdn.debian.net/debian/
 
 NEWHOST=debian-$(hostid)
 echo "$NEWHOST" >/target/etc/hostname
