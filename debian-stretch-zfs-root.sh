@@ -250,7 +250,7 @@ for EFIPARTITION in "${EFIPARTITIONS[@]}"; do
 	((I++)) || true
 done
 
-debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree --components main,contrib,non-free $TARGETDIST /target http://cdn.debian.net/debian/
+debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree,linux-headers-amd64 --components main,contrib,non-free $TARGETDIST /target http://cdn.debian.net/debian/
 
 NEWHOST=debian-$(hostid)
 echo "$NEWHOST" >/target/etc/hostname
