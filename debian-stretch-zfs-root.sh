@@ -33,9 +33,8 @@ PARTBIOS=1
 PARTEFI=2
 PARTZFS=3
 
-SIZESWAP=2G
-SIZETMP=3G
-SIZEVARTMP=3G
+SIZESWAP=8G
+SRVZFS=1
 
 GRUBPKG=grub-pc
 #GRUBPKG=grub-efi-amd64 # INCOMPLETE NOT TESTED
@@ -191,11 +190,11 @@ zfs set compression=lz4 $ZPOOL
 #zfs set xattr=sa $ZPOOL
 #zfs set acltype=posixacl $ZPOOL
 
-zfs create $ZPOOL/ROOT
+zfs create -o compression=lz4 $ZPOOL/ROOT
 zfs create -o mountpoint=/ $ZPOOL/ROOT/debian-$TARGETDIST
 zpool set bootfs=$ZPOOL/ROOT/debian-$TARGETDIST $ZPOOL
 
-zfs create -o mountpoint=/tmp -o setuid=off -o exec=off -o devices=off -o com.sun:auto-snapshot=false -o quota=$SIZETMP $ZPOOL/tmp
+zfs create -o mountpoint=/tmp -o setuid=off -o exec=off -o devices=off -o com.sun:auto-snapshot=false $ZPOOL/tmp
 chmod 1777 /target/tmp
 
 # /var needs to be mounted via fstab, the ZFS mount script runs too late during boot
@@ -204,12 +203,26 @@ mkdir -v /target/var
 mount -t zfs $ZPOOL/var /target/var
 
 # /var/tmp needs to be mounted via fstab, the ZFS mount script runs too late during boot
-zfs create -o mountpoint=legacy -o com.sun:auto-snapshot=false -o quota=$SIZEVARTMP $ZPOOL/var/tmp
+zfs create -o mountpoint=legacy -o com.sun:auto-snapshot=false $ZPOOL/var/tmp
 mkdir -v -m 1777 /target/var/tmp
 mount -t zfs $ZPOOL/var/tmp /target/var/tmp
 chmod 1777 /target/var/tmp
 
-zfs create -V $SIZESWAP -b "$(getconf PAGESIZE)" -o primarycache=metadata -o com.sun:auto-snapshot=false -o logbias=throughput -o sync=always $ZPOOL/swap
+# Creating missed ZFSs from https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS 
+zfs create -o setuid=off ${ZPOOL}/home
+zfs create -o mountpoint=/root ${ZPOOL}/home/root
+zfs create -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
+zfs create ${ZPOOL}/var/log
+zfs create ${ZPOOL}/var/spool
+zfs create ${ZPOOL}/srv
+
+# Add services specific ZFSs
+if [ ${SRVZFS} -eq 1]; then
+zfs create ${ZPOOL}/var/log/mysql
+zfs create -o mountpoint=/var/lib/mongodb ${ZPOOL}/srv/mongodb
+fi
+
+zfs create -V $SIZESWAP -b "$(getconf PAGESIZE)" -o primarycache=metadata -o com.sun:auto-snapshot=false -o secondarycache=none -o logbias=throughput -o sync=always $ZPOOL/swap
 # sometimes needed to wait for /dev/zvol/$ZPOOL/swap to appear
 sleep 2
 mkswap -f /dev/zvol/$ZPOOL/swap
@@ -232,7 +245,7 @@ for EFIPARTITION in "${EFIPARTITIONS[@]}"; do
 	((I++)) || true
 done
 
-debootstrap --include=openssh-server,locales,joe,rsync,sharutils,psmisc,htop,patch,less $TARGETDIST /target http://deb.debian.org/debian/
+debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools $TARGETDIST /target http://cdn.debian.net/debian/
 
 NEWHOST=debian-$(hostid)
 echo "$NEWHOST" >/target/etc/hostname
@@ -249,9 +262,16 @@ cat << EOF >/target/etc/fstab
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system>         <mount point>   <type>  <options>       <dump>  <pass>
-/dev/zvol/$ZPOOL/swap     none            swap    defaults        0       0
-$ZPOOL/var                /var            zfs     defaults        0       0
-$ZPOOL/var/tmp            /var/tmp        zfs     defaults        0       0
+/dev/zvol/${ZPOOL}/swap     none            swap    defaults        0       0
+${ZPOOL}/var                /var            zfs     defaults        0       0
+${ZPOOL}/var/tmp            /var/tmp        zfs     defaults        0       0
+${ZPOOL}/home		/home		zfs	defaults	0	0
+${ZPOOL}/home/root	/root		zfs	defaults	0	0
+${ZPOOL}/var/cache	/var/cache	zfs	defaults	0	0
+${ZPOOL}/var/log	/var/log	zfs	defaults	0	0
+${ZPOOL}/var/spool	/var/spool	zfs	defaults	0	0
+${ZPOOL}/srv		/srv		zfs	defaults	0	0
+
 EOF
 
 mount --rbind /dev /target/dev
@@ -267,7 +287,7 @@ perl -i -pe 's/main$/main contrib non-free/' /target/etc/apt/sources.list
 chroot /target /usr/bin/apt-get update
 
 chroot /target /usr/bin/apt-get install --yes linux-image-amd64 grub2-common $GRUBPKG zfs-initramfs zfs-dkms
-grep -q zfs /target/etc/default/grub || perl -i -pe 's/quiet/boot=zfs quiet/' /target/etc/default/grub 
+grep -q zfs /target/etc/default/grub || perl -i -pe 's/quiet/boot=zfs ipv6.disable=1 net.ifnames=0 biosdevname=0/' /target/etc/default/grub 
 chroot /target /usr/sbin/update-grub
 
 if [ "${GRUBPKG:0:8}" == "grub-efi" ]; then
