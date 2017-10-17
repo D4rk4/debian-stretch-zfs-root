@@ -250,7 +250,7 @@ for EFIPARTITION in "${EFIPARTITIONS[@]}"; do
 	((I++)) || true
 done
 
-debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree,linux-headers-amd64 --components main,contrib,non-free $TARGETDIST /target http://cdn.debian.net/debian/
+debootstrap --include=iftop,ca-certificates,man,dirmngr,openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree,linux-headers-amd64 --components main,contrib,non-free $TARGETDIST /target http://cdn.debian.net/debian/
 
 NEWHOST=debian-$(hostid)
 echo "$NEWHOST" >/target/etc/hostname
@@ -328,7 +328,8 @@ chroot /target /usr/sbin/dpkg-reconfigure tzdata
 
 sync
 
-#zfs umount -a
+zfs umount -a
+zpool export ${ZPOOL}
 
 ## chroot /target /bin/bash --login
 ## zpool import -R /target rpool
