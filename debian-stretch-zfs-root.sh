@@ -270,12 +270,12 @@ cat << EOF >/target/etc/fstab
 /dev/zvol/${ZPOOL}/swap     none            swap    defaults        0       0
 ${ZPOOL}/var                /var            zfs     defaults        0       0
 ${ZPOOL}/var/tmp            /var/tmp        zfs     defaults        0       0
-${ZPOOL}/home		/home		zfs	defaults	0	0
-${ZPOOL}/home/root	/root		zfs	defaults	0	0
-${ZPOOL}/var/cache	/var/cache	zfs	defaults	0	0
-${ZPOOL}/var/log	/var/log	zfs	defaults	0	0
-${ZPOOL}/var/spool	/var/spool	zfs	defaults	0	0
-${ZPOOL}/srv		/srv		zfs	defaults	0	0
+#${ZPOOL}/home		/home		zfs	defaults	0	0
+#${ZPOOL}/home/root	/root		zfs	defaults	0	0
+#${ZPOOL}/var/cache	/var/cache	zfs	defaults	0	0
+#${ZPOOL}/var/log	/var/log	zfs	defaults	0	0
+#${ZPOOL}/var/spool	/var/spool	zfs	defaults	0	0
+#${ZPOOL}/srv		/srv		zfs	defaults	0	0
 
 EOF
 
