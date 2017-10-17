@@ -186,12 +186,11 @@ for ZFSFEATURE in async_destroy empty_bpobj lz4_compress spacemap_histogram enab
 done
 zfs set compression=lz4 $ZPOOL
 # The two properties below improve performance but reduce compatibility with non-Linux ZFS implementations
-# Commented out by default
-#zfs set xattr=sa $ZPOOL
-#zfs set acltype=posixacl $ZPOOL
+zfs set xattr=sa $ZPOOL
+zfs set acltype=posixacl $ZPOOL
 
-zfs create -o compression=lz4 $ZPOOL/ROOT
-zfs create -o mountpoint=/ $ZPOOL/ROOT/debian-$TARGETDIST
+zfs create -o canmount=off -o mountpoint=none $ZPOOL/ROOT
+zfs create -o canmount=noauto -o mountpoint=/ $ZPOOL/ROOT/debian-$TARGETDIST
 zpool set bootfs=$ZPOOL/ROOT/debian-$TARGETDIST $ZPOOL
 
 zfs create -o mountpoint=/tmp -o setuid=off -o exec=off -o devices=off -o com.sun:auto-snapshot=false $ZPOOL/tmp
@@ -209,22 +208,22 @@ mount -t zfs $ZPOOL/var/tmp /target/var/tmp
 chmod 1777 /target/var/tmp
 
 # Creating missed ZFSs from https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS 
-zfs create -o setuid=off ${ZPOOL}/home
+zfs create -o mountpoint=/home -o setuid=off ${ZPOOL}/home
 zfs mount ${ZPOOL}/home
 
 zfs create -o mountpoint=/root ${ZPOOL}/home/root
 zfs mount ${ZPOOL}/home/root
 
-zfs create -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
+zfs create -o mountpoint=/var/cache -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
 zfs mount ${ZPOOL}/var/cache 
 
-zfs create ${ZPOOL}/var/log
+zfs create -o mountpoint=/var/log ${ZPOOL}/var/log
 zfs mount ${ZPOOL}/var/log
 
-zfs create ${ZPOOL}/var/spool
+zfs create -o mountpoint=/var/spool ${ZPOOL}/var/spool
 zfs mount ${ZPOOL}/var/spool
 
-zfs create ${ZPOOL}/srv
+zfs create -o mountpoint=/srv ${ZPOOL}/srv
 zfs mount ${ZPOOL}/srv
 
 # Add services specific ZFSs
