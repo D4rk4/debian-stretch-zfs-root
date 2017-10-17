@@ -210,16 +210,28 @@ chmod 1777 /target/var/tmp
 
 # Creating missed ZFSs from https://github.com/zfsonlinux/zfs/wiki/Debian-Stretch-Root-on-ZFS 
 zfs create -o setuid=off ${ZPOOL}/home
+mkdir -v /target/home
+mount -t zfs ${ZPOOL}/home /target/home
 zfs create -o mountpoint=/root ${ZPOOL}/home/root
+mkdir -v /target/root
+mount -t zfs ${ZPOOL}/home/root /target/root
 zfs create -o com.sun:auto-snapshot=false ${ZPOOL}/var/cache
+mkdir -v /target/var/cache
+mount -t zfs ${ZPOOL}/var/cache /target/var/cache 
 zfs create ${ZPOOL}/var/log
+mkdir -v /target/var/log
+mount -t zfs ${ZPOOL}/var/log	/target/var/log
 zfs create ${ZPOOL}/var/spool
+mkdir -v /target/var/spool
+mount -t zfs ${ZPOOL}/var/spool /target/var/spool
 zfs create ${ZPOOL}/srv
+mkdir -v /target/srv
+mount -t zfs ${ZPOOL}/srv /target/var/srv
 
 # Add services specific ZFSs
-if [ ${SRVZFS} -eq 1]; then
-zfs create ${ZPOOL}/var/log/mysql
-zfs create -o mountpoint=/var/lib/mongodb ${ZPOOL}/srv/mongodb
+if [ "${SRVZFS}" -eq 1 ]; then
+	zfs create ${ZPOOL}/var/log/mysql
+	zfs create -o mountpoint=/var/lib/mongodb ${ZPOOL}/srv/mongodb
 fi
 
 zfs create -V $SIZESWAP -b "$(getconf PAGESIZE)" -o primarycache=metadata -o com.sun:auto-snapshot=false -o secondarycache=none -o logbias=throughput -o sync=always $ZPOOL/swap
@@ -245,7 +257,7 @@ for EFIPARTITION in "${EFIPARTITIONS[@]}"; do
 	((I++)) || true
 done
 
-debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree $TARGETDIST /target http://cdn.debian.net/debian/
+debootstrap --include=openssh-server,locales,rsync,sharutils,psmisc,htop,patch,less,mc,net-tools,firmware-misc-nonfree --components main,contrib,non-free $TARGETDIST /target http://cdn.debian.net/debian/
 
 NEWHOST=debian-$(hostid)
 echo "$NEWHOST" >/target/etc/hostname
